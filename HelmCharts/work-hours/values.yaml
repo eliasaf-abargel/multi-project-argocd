@@ -1,0 +1,94 @@
+# Default values for nginx.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: (ecr-aws$).dkr.ecr.eu-west-1.amazonaws.com/dev-max2000_ui
+  pullPolicy: Always
+  tag: work-hours-latest
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "work-hours"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 4200
+  targetPort: 4200
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/group.name: dev-alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'  
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'  
+    alb.ingress.kubernetes.io/healthy-threshold-count: '3' 
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/security-groups: sg-00fae992426111d51
+    alb.ingress.kubernetes.io/subnets: 	subnet-09ee01d559fce86f2, subnet-0cd0c603c0fd1844f
+  hosts:
+    - host: ""
+      paths:
+        - path: /work-hours
+          pathType: Prefix
+          backend:
+            serviceName: work-hours
+            servicePort: 4200
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+deployment:
+  restartPolicy: Always
+
+configMap:
+  ASPNETCORE_ENVIRONMENT: "Development"
+  APP_NAME: "work-hours"
+
+ports:
+  - containerPort: 8080

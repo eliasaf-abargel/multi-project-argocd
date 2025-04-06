@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "work-hours-api.fullname" . }}-env-config
+  labels:
+    {{- include "work-hours-api.labels" . | nindent 4 }}
+data:
+{{ toYaml $.Values.configMap | indent 2 }}
