@@ -53,8 +53,8 @@ ingress:
     alb.ingress.kubernetes.io/healthy-threshold-count: '3' 
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    alb.ingress.kubernetes.io/security-groups: sg-00fae992426111d51
-    alb.ingress.kubernetes.io/subnets: 	subnet-09ee01d559fce86f2, subnet-0cd0c603c0fd1844f
+    alb.ingress.kubernetes.io/security-groups: sg-00fae9xxxxxx
+    alb.ingress.kubernetes.io/subnets: 	subnet-09ee01dxxxxxx, subnet-0cd0cxxxxxxx
   hosts:
     - host: ""
       paths:

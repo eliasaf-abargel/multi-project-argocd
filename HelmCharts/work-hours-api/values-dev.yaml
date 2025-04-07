@@ -51,9 +51,9 @@ ingress:
     # alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/scheme: internal
     alb.ingress.kubernetes.io/load-balancer-name: alb-dev-api
-    alb.ingress.kubernetes.io/group.name: alb-comaxdev-api
+    alb.ingress.kubernetes.io/group.name: alb-dev-api
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:(account-aws$):certificate/a255f1cd-72c3-46e3-8b24-90428e21df78
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:(account-aws$):certificate/a255f1cd-72c3-46e3-8b24-xxxxxxxx
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
     alb.ingress.kubernetes.io/load-balancer-attributes: routing.http2.enabled=true
     alb.ingress.kubernetes.io/target-type: ip
@@ -62,8 +62,8 @@ ingress:
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
     alb.ingress.kubernetes.io/healthy-threshold-count: '3'
     alb.ingress.kubernetes.io/tags: "env=dev-api,terraform=true"
-    alb.ingress.kubernetes.io/security-groups: sg-00fae992426111d51
-    alb.ingress.kubernetes.io/subnets: subnet-0a6995412ab4d9517, subnet-0f5ab72375fc48d25
+    alb.ingress.kubernetes.io/security-groups: sg-00faxxxxxxxx
+    alb.ingress.kubernetes.io/subnets: subnet-0a6xxxxxxx, subnet-0f5ab7xxxxxx
 
     # alb.ingress.kubernetes.io/group.name: comax-dev-alb-api
     # alb.ingress.kubernetes.io/scheme: internet-facing
@@ -73,7 +73,7 @@ ingress:
     # alb.ingress.kubernetes.io/healthy-threshold-count: '3' 
     # alb.ingress.kubernetes.io/target-type: ip
     # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    # alb.ingress.kubernetes.io/security-groups: sg-00fae992426111d51
+    # alb.ingress.kubernetes.io/security-groups: sg-00fae992xxxx
   hosts:
     - host: ""
       paths:
