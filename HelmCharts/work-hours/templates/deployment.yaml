@@ -4,10 +4,19 @@ metadata:
   name: {{ include "work-hours.fullname" . }}
   labels:
     {{- include "work-hours.labels" . | nindent 4 }}
+  annotations:
+    # Record deployment cause for rollback purposes
+    kubernetes.io/change-cause: "Version {{ .Values.image.tag }} deployed at {{ now | date "2006-01-02T15:04:05Z07:00" }}"
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
+  # Configure safer rolling updates
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       {{- include "work-hours.selectorLabels" . | nindent 6 }}
@@ -41,19 +50,36 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
-           - configMapRef:
-               name: {{ include "work-hours.fullname" . }}-env-config       
+            - configMapRef:
+                name: {{ include "work-hours.fullname" . }}-env-config
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          # Client-side application health checks (UI)
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
+          {{- else }}
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           {{- end }}
           {{- with .Values.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
+          {{- else }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           {{- end }}
           {{- with .Values.resources }}
           resources:
@@ -63,6 +89,8 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+      # Add grace period for clean shutdown
+      terminationGracePeriodSeconds: 30
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}

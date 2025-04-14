@@ -4,19 +4,30 @@ metadata:
   name: {{ include "work-hours-api.fullname" . }}
   labels:
     {{- include "work-hours-api.labels" . | nindent 4 }}
+  # Record deployment cause for rollback and history
+  annotations:
+    kubernetes.io/change-cause: "Image {{ .Values.image.tag }} deployed at {{ now | date "2006-01-02T15:04:05Z07:00" }}"
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
+  # Configure safer rolling updates
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       {{- include "work-hours-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        # Trigger pod restart when configmap changes
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "work-hours-api.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -41,20 +52,67 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
-           - configMapRef:
-               name: {{ include "work-hours-api.fullname" . }}-env-config       
+            - configMapRef:
+                name: {{ include "work-hours-api.fullname" . }}-env-config
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+
+          # Read health check path from ingress if available
+          {{- $healthPath := "/work-hours/health" }}
+          {{- if (and .Values.ingress.enabled .Values.ingress.annotations) }}
+          {{- if (index .Values.ingress.annotations "alb.ingress.kubernetes.io/healthcheck-path") }}
+          {{- $healthPath = index .Values.ingress.annotations "alb.ingress.kubernetes.io/healthcheck-path" }}
+          {{- end }}
+          {{- end }}
+
+          # API server health checks using HTTP endpoint
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
+          {{- else }}
+          livenessProbe:
+            httpGet:
+              path: {{ $healthPath }}
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
           {{- end }}
+
           {{- with .Values.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
+          {{- else }}
+          readinessProbe:
+            httpGet:
+              path: {{ $healthPath }}
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
           {{- end }}
+
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- else }}
+          startupProbe:
+            httpGet:
+              path: {{ $healthPath }}
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+            successThreshold: 1
+          {{- end }}
+
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -63,6 +121,8 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+      # Add grace period for clean shutdown
+      terminationGracePeriodSeconds: 60
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}

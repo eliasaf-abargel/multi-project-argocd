@@ -18,3 +18,15 @@ spec:
     automated:
       prune   : true
       selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - Validate=true
+      - PruneLast=true
+    retryStrategy:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m

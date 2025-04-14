@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include (printf "%s.fullname" .Chart.Name) . }}-health-check
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  labels:
+    {{- include (printf "%s.labels" .Chart.Name) . | nindent 4 }}
+    app.kubernetes.io/component: healthcheck
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      containers:
+        - name: health-check
+          image: curlimages/curl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Get the health check path from ingress annotations if available
+              HEALTH_PATH="/health"
+
+              # Try to find existing service
+              if kubectl get deployment {{ include (printf "%s.fullname" .Chart.Name) . }} -n {{ .Release.Namespace }} 2>/dev/null; then
+                echo "✅ Checking existing API health before update..."
+
+                # Get service endpoint
+                SERVICE_IP=$(kubectl get svc {{ include (printf "%s.fullname" .Chart.Name) . }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.clusterIP}')
+                SERVICE_PORT={{ .Values.service.port }}
+
+                # Adding app path prefix if it exists (common for APIs)
+                APP_PATH=$(echo {{ .Chart.Name }} | sed 's/-api$//')
+                if [[ "$APP_PATH" != "{{ .Chart.Name }}" ]]; then
+                  HEALTH_PATH="/$APP_PATH$HEALTH_PATH"
+                fi
+
+                echo "Checking health at: http://${SERVICE_IP}:${SERVICE_PORT}${HEALTH_PATH}"
+
+                # Retry health check with exponential backoff
+                MAX_RETRIES=5
+                RETRY_COUNT=0
+                DELAY=5
+
+                while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${SERVICE_IP}:${SERVICE_PORT}${HEALTH_PATH})
+
+                  if [ "$STATUS" = "200" ]; then
+                    echo "✅ Service health check passed with status 200!"
+                    exit 0
+                  fi
+
+                  RETRY_COUNT=$((RETRY_COUNT+1))
+                  echo "❌ Health check attempt $RETRY_COUNT failed with status $STATUS, retrying in ${DELAY}s..."
+                  sleep $DELAY
+                  DELAY=$((DELAY*2))  # Exponential backoff
+                done
+
+                echo "❌ Service health check failed after $MAX_RETRIES attempts!"
+                exit 1
+              else
+                echo "🔍 No existing deployment found, skipping health check"
+                exit 0
+              fi
+      restartPolicy: Never
+      serviceAccountName: {{ include (printf "%s.serviceAccountName" .Chart.Name) . }}
+  backoffLimit: 1

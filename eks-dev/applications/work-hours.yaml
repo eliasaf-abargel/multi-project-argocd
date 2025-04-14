@@ -1,25 +1,26 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name     : work-hours
+  name: work-hours
   namespace: argocd
   finalizers:
-  - resources-finalizer.argocd.argoproj.io
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   destination:
-    name     : in-cluster
+    name: in-cluster
     namespace: eks-dev
   source:
-    path   : "HelmCharts/work-hours"
+    path: "HelmCharts/work-hours"
     repoURL: "git@github.com:eliasaf-abargel/multi-project-argocd.git"
     targetRevision: HEAD
     helm:
       valueFiles:
-      - values-dev.yaml
+        - values-dev.yaml
       parameters:
-      - name: "image.tag"
-        value: "work-hours-latest"
-
+        - name: "image.tag"
+          value: "work-hours-latest"
   project: default
   syncPolicy:
     automated:
@@ -27,3 +28,12 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - Validate=true
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m

@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include (printf "%s.fullname" .Chart.Name) . }}-health-check
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  labels:
+    {{- include (printf "%s.labels" .Chart.Name) . | nindent 4 }}
+    app.kubernetes.io/component: healthcheck
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      containers:
+        - name: health-check
+          image: curlimages/curl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # For UI applications, we check if the service is listening
+              if kubectl get deployment {{ include (printf "%s.fullname" .Chart.Name) . }} -n {{ .Release.Namespace }} 2>/dev/null; then
+                echo "✅ Checking existing UI service before update..."
+
+                # Get service endpoint
+                SERVICE_IP=$(kubectl get svc {{ include (printf "%s.fullname" .Chart.Name) . }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.clusterIP}')
+                SERVICE_PORT={{ .Values.service.port }}
+
+                # For UI we only check TCP connection, not HTTP status
+                echo "Checking TCP connection to: ${SERVICE_IP}:${SERVICE_PORT}"
+
+                # Retry TCP check
+                MAX_RETRIES=5
+                RETRY_COUNT=0
+                DELAY=5
+
+                while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                  # Using netcat to check TCP connection
+                  if timeout 5 nc -z ${SERVICE_IP} ${SERVICE_PORT}; then
+                    echo "✅ Service TCP check passed! Port is open and responding."
+
+                    # Optional: try to fetch root page to see if server responds at all
+                    RESPONSE_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://${SERVICE_IP}:${SERVICE_PORT}/ || echo "failed")
+                    echo "HTTP Response code: $RESPONSE_CODE (informational only, success not required)"
+
+                    exit 0
+                  fi
+
+                  RETRY_COUNT=$((RETRY_COUNT+1))
+                  echo "❌ TCP check attempt $RETRY_COUNT failed, retrying in ${DELAY}s..."
+                  sleep $DELAY
+                  DELAY=$((DELAY*2))  # Exponential backoff
+                done
+
+                echo "❌ Service check failed after $MAX_RETRIES attempts!"
+                # Since UI may not have health endpoints, we don't want to block
+                # deployment if it fails - just warn
+                echo "⚠️ Warning: UI service check failed but continuing with deployment"
+                exit 0
+              else
+                echo "🔍 No existing deployment found, skipping health check"
+                exit 0
+              fi
+      restartPolicy: Never
+      serviceAccountName: {{ include (printf "%s.serviceAccountName" .Chart.Name) . }}
+  backoffLimit: 1
