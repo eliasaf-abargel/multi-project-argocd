@@ -25,24 +25,21 @@ Key features include:
 ```mermaid
 flowchart TB
     subgraph "Developer Workflow"
-        Dev[fa:fa-laptop "Developers"] -->|"Push changes"| Git[(fa:fa-code-branch "Git Repository")]
+        Dev["👩‍💻 Developers"] -->|"Push changes"| Git[("📦 Git Repository")]
         Dev -->|"Clone / Pull"| Git
     end
     
     subgraph "GitOps Engine"
-        Git -->|"Monitor"| ArgoCD["fa:fa-sync ArgoCD"]
-        ArgoCD -->|"Apply changes"| K8S[" fa:fa-dharmachakra Kubernetes"]
+        Git -->|"Monitor"| ArgoCD["🔄 ArgoCD"]
+        ArgoCD -->|"Apply changes"| K8S["☸️ Kubernetes"]
         ArgoCD -->|"Report status"| Git
     end
     
     subgraph "Runtime Environment"
-        K8S -->|"Deploy"| Apps["fa:fa-cubes Applications"]
-        K8S -->|"Deploy"| Infra["fa:fa-server Infrastructure"]
+        K8S -->|"Deploy"| Apps["📱 Applications"]
+        K8S -->|"Deploy"| Infra["🖥️ Infrastructure"]
         
-        Collector["fa:fa-search Splunk
-        OpenTelemetry
-        Collector"] -->|"Send telemetry"| Splunk["fa:fa-chart-line Splunk
-        Platform"]
+        Collector["🔍 Splunk OpenTelemetry Collector"] -->|"Send telemetry"| Splunk["📊 Splunk Platform"]
         
         Apps -->|"Generate logs/metrics"| Collector
         Infra -->|"Generate logs/metrics"| Collector
@@ -50,8 +47,8 @@ flowchart TB
     
     subgraph "Environments"
         direction LR
-        Dev_Env["fa:fa-flask Dev"]
-        Prod_Env["fa:fa-industry Prod"]
+        Dev_Env["🧪 Dev"]
+        Prod_Env["🏭 Prod"]
     end
     
     ArgoCD -->|"Sync apps to"| Dev_Env
@@ -61,10 +58,8 @@ flowchart TB
     
     subgraph "Helm Charts"
         direction LR
-        App_Charts["fa:fa-file-code Application
-        Charts"]
-        Infra_Charts["fa:fa-cogs Infrastructure
-        Charts"]
+        App_Charts["📄 Application Charts"]
+        Infra_Charts["⚙️ Infrastructure Charts"]
     end
     
     Git -->|"Contains"| App_Charts
