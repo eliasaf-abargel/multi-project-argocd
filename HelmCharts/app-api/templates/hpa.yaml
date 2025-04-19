@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "work-hours.fullname" . }}
+  name: {{ include "app-api.fullname" . }}
   labels:
-    {{- include "work-hours.labels" . | nindent 4 }}
+    {{- include "app-api.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "work-hours.fullname" . }}
+    name: {{ include "app-api.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

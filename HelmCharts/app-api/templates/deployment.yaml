@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "work-hours-api.fullname" . }}
+  name: {{ include "app-api.fullname" . }}
   labels:
-    {{- include "work-hours-api.labels" . | nindent 4 }}
+    {{- include "app-api.labels" . | nindent 4 }}
   # Record deployment cause for rollback and history
   annotations:
     kubernetes.io/change-cause: "Image {{ .Values.image.tag }} deployed at {{ now | date "2006-01-02T15:04:05Z07:00" }}"
@@ -19,7 +19,7 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      {{- include "work-hours-api.selectorLabels" . | nindent 6 }}
+      {{- include "app-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -29,7 +29,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "work-hours-api.labels" . | nindent 8 }}
+        {{- include "app-api.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -38,7 +38,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "work-hours-api.serviceAccountName" . }}
+      serviceAccountName: {{ include "app-api.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -53,14 +53,14 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - configMapRef:
-                name: {{ include "work-hours-api.fullname" . }}-env-config
+                name: {{ include "app-api.fullname" . }}-env-config
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
 
           # Read health check path from ingress if available
-          {{- $healthPath := "/work-hours/health" }}
+          {{- $healthPath := "/app-api/health" }}
           {{- if (and .Values.ingress.enabled .Values.ingress.annotations) }}
           {{- if (index .Values.ingress.annotations "alb.ingress.kubernetes.io/healthcheck-path") }}
           {{- $healthPath = index .Values.ingress.annotations "alb.ingress.kubernetes.io/healthcheck-path" }}

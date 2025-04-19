@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "work-hours.fullname" . }}
+  name: {{ include "app-api.fullname" . }}
   labels:
-    {{- include "work-hours.labels" . | nindent 4 }}
+    {{- include "app-api.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -35,7 +35,7 @@ spec:
             {{- end }}
             backend:
               service:
-                name: {{ include "work-hours.fullname" $ }}
+                name: {{ include "app-api.fullname" $ }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}

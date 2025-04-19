@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "work-hours.fullname" . }}
+  name: {{ include "app-client.fullname" . }}
   labels:
-    {{- include "work-hours.labels" . | nindent 4 }}
+    {{- include "app-client.labels" . | nindent 4 }}
   annotations:
     # Record deployment cause for rollback purposes
     kubernetes.io/change-cause: "Version {{ .Values.image.tag }} deployed at {{ now | date "2006-01-02T15:04:05Z07:00" }}"
@@ -19,7 +19,7 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      {{- include "work-hours.selectorLabels" . | nindent 6 }}
+      {{- include "app-client.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -27,7 +27,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "work-hours.labels" . | nindent 8 }}
+        {{- include "app-client.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -36,7 +36,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "work-hours.serviceAccountName" . }}
+      serviceAccountName: {{ include "app-client.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -51,7 +51,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - configMapRef:
-                name: {{ include "work-hours.fullname" . }}-env-config
+                name: {{ include "app-client.fullname" . }}-env-config
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

@@ -1,24 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: work-hours
+  name     : app-api
   namespace: argocd
   finalizers:
-    - resources-finalizer.argocd.argoproj.io
+  - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
-    name: in-cluster
-    namespace: eks-dev
+    name     : in-cluster
+    namespace: eks-prod
   source:
-    path: "HelmCharts/work-hours"
+    path   : "HelmCharts/app-api"
     repoURL: "git@github.com:eliasaf-abargel/multi-project-argocd.git"
     targetRevision: HEAD
     helm:
       valueFiles:
-        - values-dev.yaml
+      - values-prod.yaml
       parameters:
-        - name: "image.tag"
-          value: "work-hours-latest"
+      - name: "image.tag"
+        value: "app-api-latest"
+
   project: default
   syncPolicy:
     automated:

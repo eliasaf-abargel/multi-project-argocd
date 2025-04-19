@@ -5,9 +5,9 @@
 replicaCount: 1
 
 image:
-  repository: (ecr-aws$).dkr.ecr.eu-west-1.amazonaws.com/dev-max2000webapi
+  repository: (ecr-aws$).dkr.ecr.eu-west-1.amazonaws.com/dev-app-api
   pullPolicy: Always
-  tag: work-hours-api-latest
+  tag: app-api-latest
 
 imagePullSecrets: []
 nameOverride: ""
@@ -20,7 +20,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "work-hours-api"
+  name: "app-api"
 
 annotations:
   instrumentation.opentelemetry.io/inject-dotnet: "default/splunk-otel-collector"
@@ -59,7 +59,7 @@ ingress:
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
     alb.ingress.kubernetes.io/load-balancer-attributes: routing.http2.enabled=true
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/healthcheck-path: /work-hours/health
+    alb.ingress.kubernetes.io/healthcheck-path: /app-api/health
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
     alb.ingress.kubernetes.io/healthy-threshold-count: '3'
@@ -79,10 +79,10 @@ ingress:
   hosts:
     - host: ""
       paths:
-        - path: /work-hours
+        - path: /app-api
           pathType: Prefix
           backend:
-            serviceName: work-hours-api
+            serviceName: app-api
             servicePort: 8080
   tls: []
   #  - secretName: chart-example-tls

@@ -5,9 +5,9 @@
 replicaCount: 1
 
 image:
-  repository: (ecr-aws$).dkr.ecr.eu-west-1.amazonaws.com/dev-max2000_ui
+  repository: (ecr-aws$).dkr.ecr.eu-west-1.amazonaws.com/dev-app-api
   pullPolicy: Always
-  tag: work-hours-latest
+  tag: app-api-latest
 
 imagePullSecrets: []
 nameOverride: ""
@@ -20,7 +20,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "work-hours"
+  name: "app-api"
 
 podAnnotations: {}
 
@@ -37,32 +37,32 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 4200
-  targetPort: 4200
+  port: 8080
+  targetPort: 8080
 
 ingress:
   enabled: true
   className: ""
   annotations:
     kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/group.name: dev-alb
+    alb.ingress.kubernetes.io/group.name: dev-alb-api
     alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-path: /work-hours/health
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'  
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'  
     alb.ingress.kubernetes.io/healthy-threshold-count: '3' 
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-    alb.ingress.kubernetes.io/security-groups: sg-00fae99xxxxxxx
-    alb.ingress.kubernetes.io/subnets: 	subnet-09ee01d55xxxxx, subnet-0cd0c6xxxxxx
+    alb.ingress.kubernetes.io/security-groups: sg-00fae9xxxxxx
+    alb.ingress.kubernetes.io/subnets: 	subnet-09ee01dxxxxxx, subnet-0cd0cxxxxxxx
   hosts:
     - host: ""
       paths:
-        - path: /work-hours
+        - path: /app-api
           pathType: Prefix
           backend:
-            serviceName: work-hours
-            servicePort: 4200
+            serviceName: app-api
+            servicePort: 8080
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -88,7 +88,6 @@ deployment:
 
 configMap:
   ASPNETCORE_ENVIRONMENT: "Development"
-  APP_NAME: "work-hours"
 
 ports:
   - containerPort: 8080
