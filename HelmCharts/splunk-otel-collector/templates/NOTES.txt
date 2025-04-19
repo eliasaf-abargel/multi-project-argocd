@@ -1,0 +1,22 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your Splunk OpenTelemetry Collector is now collecting logs and metrics from your Kubernetes cluster.
+
+To verify installation:
+  kubectl get pods -n {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "splunk-otel-collector.name" . }}"
+
+To check collector logs:
+  kubectl logs -n {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "splunk-otel-collector.name" . }}" -f
+
+To instrument your applications:
+1. Add the following annotation to your application's deployment:
+   annotations:
+     instrumentation.opentelemetry.io/inject-java: "true"
+     instrumentation.opentelemetry.io/inject-python: "true"
+     instrumentation.opentelemetry.io/inject-nodejs: "true"
+     instrumentation.opentelemetry.io/inject-dotnet: "true"
+
+2. For manual instrumentation, use the collector endpoint:
+   OTEL_EXPORTER_OTLP_ENDPOINT=http://{{ include "splunk-otel-collector.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:4318
+
+For more information, visit: https://github.com/signalfx/splunk-otel-collector

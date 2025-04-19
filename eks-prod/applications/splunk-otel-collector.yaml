@@ -1,28 +1,24 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: work-hours
+  name: splunk-otel-collector
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # This will run before other applications
 spec:
   destination:
     name: in-cluster
-    namespace: eks-dev
+    namespace: splunk-otel-collector  # Consider using a dedicated namespace
   source:
-    path: "HelmCharts/work-hours"
+    path: "HelmCharts/splunk-otel-collector"
     repoURL: "git@github.com:eliasaf-abargel/multi-project-argocd.git"
     targetRevision: HEAD
-    helm:
-      valueFiles:
-        - values-dev.yaml
-      parameters:
-        - name: "image.tag"
-          value: "work-hours-latest"
   project: default
   syncPolicy:
     automated:
-      prune   : true
+      prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true

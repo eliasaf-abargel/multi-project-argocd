@@ -1,0 +1,71 @@
+# Default values for splunk-otel-collector
+replicaCount: 1
+
+image:
+  repository: quay.io/signalfx/splunk-otel-collector
+  pullPolicy: IfNotPresent
+  tag: "0.121.0"
+
+serviceAccount:
+  create: true
+  name: ""
+
+rbac:
+  create: true
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+
+securityContext:
+  runAsUser: 0
+  privileged: false
+
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 400Mi
+
+# Splunk specific settings
+splunk:
+  endpoint: "https://http-inputs-comax.splunkcloud.com/services/collector"
+  token: "4551b217-xxxxxx-xxxxxx-xxxxxx"
+  index: "k8-Dev"
+  tlsSkipVerify: false
+  # Additional configurations for better log collection
+  logsEngine: "filelog"  # Use filelog engine for kubernetes logs
+  logsCollection:
+    enabled: true
+  metricsCollection:
+    enabled: true
+
+# OpenTelemetry Collector settings
+collector:
+  logLevel: info
+  debug: false
+  kubeletstats:
+    interval: 20s
+  # Add log retention
+  logRetention: "24h"
+  # Add additional receiver settings for APM
+  receivers:
+    otlp:
+      enabled: true
+    filelog:
+      enabled: true
+
+# Cluster metadata
+clusterName: "eks-comax-dev"
+environment: "development"
+region: "eu-west-1"
+
+# autoscaling settings
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80

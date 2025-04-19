@@ -22,7 +22,10 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: "work-hours"
 
-podAnnotations: { instrumentation.opentelemetry.io/inject-nodejs: "default/splunk-otel-collector", instrumentation.opentelemetry.io/inject-python: "default/splunk-otel-collector", instrumentation.opentelemetry.io/inject-javascript: "default/splunk-otel-collector" }
+annotations:
+  instrumentation.opentelemetry.io/inject-nodejs: "default/splunk-otel-collector"
+  instrumentation.opentelemetry.io/inject-python: "default/splunk-otel-collector"
+  instrumentation.opentelemetry.io/inject-javascript: "default/splunk-otel-collector"
 
 podSecurityContext: {}
   # fsGroup: 2000

@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "splunk-otel-collector.fullname" . }}-health-check
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  labels:
+    {{- include "splunk-otel-collector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: healthcheck
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      containers:
+        - name: health-check
+          image: curlimages/curl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Check if collector is already installed
+              if kubectl get deployment {{ include "splunk-otel-collector.fullname" . }} -n {{ .Release.Namespace }} 2>/dev/null; then
+                echo "✅ Checking existing collector service before update..."
+
+                # Get service IP address
+                SERVICE_IP=$(kubectl get svc {{ include "splunk-otel-collector.fullname" . }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.clusterIP}')
+
+                # Check OTLP ports
+                OTLP_PORT=4318
+                METRICS_PORT=8888
+
+                echo "Checking TCP connection to OTLP: ${SERVICE_IP}:${OTLP_PORT}"
+                echo "Checking TCP connection to metrics: ${SERVICE_IP}:${METRICS_PORT}"
+
+                # Retry logic
+                MAX_RETRIES=3
+                RETRY_COUNT=0
+                DELAY=5
+
+                while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                  # Using netcat to check TCP connection
+                  if timeout 5 nc -z ${SERVICE_IP} ${OTLP_PORT} && timeout 5 nc -z ${SERVICE_IP} ${METRICS_PORT}; then
+                    echo "✅ TCP check passed! Ports are open and responding."
+                    exit 0
+                  fi
+
+                  RETRY_COUNT=$((RETRY_COUNT+1))
+                  echo "❌ TCP check attempt $RETRY_COUNT failed, retrying in ${DELAY}s..."
+                  sleep $DELAY
+                  DELAY=$((DELAY*2))  # Exponential backoff
+                done
+
+                echo "❌ Service check failed after $MAX_RETRIES attempts!"
+                echo "⚠️ Warning: Collector service check failed but continuing with installation"
+                exit 0
+              else
+                echo "🔍 No existing installation found, skipping health check"
+                exit 0
+              fi
+      restartPolicy: Never
+      serviceAccountName: {{ include "splunk-otel-collector.serviceAccountName" . }}
+  backoffLimit: 1

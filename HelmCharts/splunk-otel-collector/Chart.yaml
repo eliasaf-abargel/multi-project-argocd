@@ -1,0 +1,20 @@
+apiVersion: v2
+name: splunk-otel-collector
+description: Splunk OpenTelemetry Collector for comprehensive logging and monitoring
+version: 0.1.0
+appVersion: "0.121.0"
+type: application
+keywords:
+  - monitoring
+  - logging
+  - observability
+  - splunk
+  - opentelemetry
+sources:
+  - https://github.com/open-telemetry/opentelemetry-collector-contrib
+  - https://github.com/signalfx/splunk-otel-collector
+home: https://github.com/your-org/splunk-otel-collector
+maintainers:
+  - name: Your Name
+    email: your.email@company.com
+icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/opentelemetry/icon/color/opentelemetry-icon-color.png
