@@ -23,69 +23,62 @@ Key features include:
 ## 🔄 GitOps Architecture Diagram
 
 ```mermaid
-flowchart TB
-    subgraph "Developer Workflow"
-        Dev["👩‍💻 Developers"] -->|"Push changes"| Git[("📦 Git Repository")]
-        Dev -->|"Clone / Pull"| Git
+flowchart TD
+    %% GitOps Process Flow Diagram
+    %% Stage 1: Developer pushes changes
+    Dev("👨‍💻 Developer") --> |"1️⃣ Commits<br>& Pushes"| GitRepo[("📦 Git<br>Repository")]
+    
+    %% Stage 2: ArgoCD detects changes
+    subgraph ArgoCD ["🔄 ArgoCD"]
+        direction TB
+        Monitor["🔍 1. Monitor"] --> Diff["📊 2. Compare<br>Differences"]
+        Diff --> Validate["✅ 3. Validate<br>Health Checks"]
+        Validate --> Apply["⚙️ 4. Apply<br>Changes"]
     end
     
-    subgraph "GitOps Engine"
-        Git -->|"Monitor"| ArgoCD["🔄 ArgoCD"]
-        ArgoCD -->|"Apply changes"| K8S["☸️ Kubernetes"]
-        ArgoCD -->|"Report status"| Git
+    GitRepo --> |"2️⃣ Detect<br>Changes"| ArgoCD
+    
+    %% Stage 3: Changes applied to cluster
+    ArgoCD --> |"3️⃣ Apply<br>Changes"| EKS["☸️ EKS Cluster"]
+    
+    %% Stage 4: Application deployment in environment
+    subgraph EKS
+        direction TB
+        Infra["🧱 Infrastructure<br>(Collectors, Services)"]
+        Apps["📱 Applications<br>(Frontends, APIs)"]
     end
     
-    subgraph "Runtime Environment"
-        K8S -->|"Deploy"| Apps["📱 Applications"]
-        K8S -->|"Deploy"| Infra["🖥️ Infrastructure"]
-        
-        Collector["🔍 Splunk OpenTelemetry Collector"] -->|"Send telemetry"| Splunk["📊 Splunk Platform"]
-        
-        Apps -->|"Generate logs/metrics"| Collector
-        Infra -->|"Generate logs/metrics"| Collector
+    %% Stage 5: Telemetry collection
+    subgraph Observability ["📊 Observability"]
+        OTEL["🔍 OpenTelemetry<br>Collector"] --> |"Send<br>Telemetry"| Splunk["📈 Splunk<br>Platform"]
     end
     
-    subgraph "Environments"
+    EKS --> |"4️⃣ Generate<br>Logs/Metrics"| OTEL
+    
+    %% Display different environments
+    subgraph Environments ["🌐 Environments"]
         direction LR
-        Dev_Env["🧪 Dev"]
-        Prod_Env["🏭 Prod"]
+        Dev_Env["🧪 Development"] 
+        Prod_Env["🏭 Production"]
     end
     
-    ArgoCD -->|"Sync apps to"| Dev_Env
-    ArgoCD -->|"Sync apps to"| Prod_Env
-    Dev_Env -.->|"Deployed to"| K8S
-    Prod_Env -.->|"Deployed to"| K8S
+    ArgoCD --> |"Sync to"| Environments
+    Environments --> |"Deployed on"| EKS
     
-    subgraph "Helm Charts"
-        direction LR
-        App_Charts["📄 Application Charts"]
-        Infra_Charts["⚙️ Infrastructure Charts"]
-    end
+    %% Node styling
+    classDef step fill:#f9f9f9,stroke:#333,stroke-width:1px,color:black
+    classDef git fill:#f34f29,color:white,stroke:#da5a47,stroke-width:2px
+    classDef argocd fill:#329AD6,color:white,stroke:#2f90c5,stroke-width:2px
+    classDef k8s fill:#326CE5,color:white,stroke:#2e64d4,stroke-width:2px
+    classDef obs fill:#111111,color:white,stroke:#000000,stroke-width:2px
+    classDef env fill:#FF9900,color:white,stroke:#ed8f00,stroke-width:2px
     
-    Git -->|"Contains"| App_Charts
-    Git -->|"Contains"| Infra_Charts
-    App_Charts -.->|"Used by"| ArgoCD
-    Infra_Charts -.->|"Used by"| ArgoCD
-        
-    classDef git fill:#f34f29,color:white,stroke:#da5a47,stroke-width:1px
-    classDef argocd fill:#329AD6,color:white,stroke:#2f90c5,stroke-width:1px
-    classDef k8s fill:#326CE5,color:white,stroke:#2e64d4,stroke-width:1px
-    classDef apps fill:#47A248,color:white,stroke:#3f9240,stroke-width:1px
-    classDef infra fill:#767676,color:white,stroke:#666666,stroke-width:1px
-    classDef splunk fill:#111111,color:white,stroke:#000000,stroke-width:1px
-    classDef env fill:#FF9900,color:white,stroke:#ed8f00,stroke-width:1px
-    classDef charts fill:#0F1689,color:white,stroke:#0d1476,stroke-width:1px
-    classDef collector fill:#425CC7,color:white,stroke:#3c54b5,stroke-width:1px
-    
-    class Git git
-    class ArgoCD argocd
-    class K8S k8s
-    class Apps apps
-    class Infra infra
-    class Splunk splunk
-    class Dev_Env,Prod_Env env
-    class App_Charts,Infra_Charts charts
-    class Collector collector
+    class Dev,GitRepo step
+    class GitRepo git
+    class ArgoCD,Monitor,Diff,Validate,Apply argocd
+    class EKS,Infra,Apps k8s
+    class Observability,OTEL,Splunk obs
+    class Environments,Dev_Env,Prod_Env env
 ```
 
 ## 🔄 The Power of GitOps Architecture
