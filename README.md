@@ -1,182 +1,563 @@
-# GitOps Architecture with ArgoCD on AWS EKS
+# 🚀 GitOps Architecture with ArgoCD on AWS EKS
 
 ![AWS](https://img.shields.io/badge/AWS-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![EKS](https://img.shields.io/badge/EKS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![ArgoCD](https://img.shields.io/badge/ArgoCD-1B9AD9?style=for-the-badge&logo=argo&logoColor=white)
 ![Helm](https://img.shields.io/badge/Helm-0F1689?style=for-the-badge&logo=helm&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Splunk](https://img.shields.io/badge/Splunk-000000?style=for-the-badge&logo=splunk&logoColor=white)
+![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-425CC7?style=for-the-badge&logo=opentelemetry&logoColor=white)
 
-## Overview
+## 📋 Overview
 
-This repository demonstrates a GitOps implementation for managing multiple EKS clusters on AWS using ArgoCD and Helm Charts. The architecture is designed to support both development and production environments while maintaining clear separation of concerns and configuration management.
+This repository demonstrates a comprehensive GitOps implementation for managing applications on AWS EKS clusters using ArgoCD and Helm Charts. The architecture follows GitOps principles to maintain a declarative infrastructure and application deployment strategy, with built-in observability through Splunk OpenTelemetry Collector integration.
 
-## Architecture
+Key features include:
+- Multi-environment support (Development, Production)
+- Full application lifecycle management via GitOps
+- Comprehensive observability with Splunk OpenTelemetry Collector
+- AWS ALB-based ingress management
+- Health checks and deployment safety mechanisms
+- Automatic application instrumentation
 
-Our GitOps architecture follows these key principles:
-- Infrastructure as Code (IaC)
-- Configuration version control
-- Declarative definitions
-- Automated deployments
-- Environment segregation
-
-### Structure Diagram
+## GitOps Architecture Diagram
 
 ```mermaid
-flowchart LR
-    A[ArgoCD] --> B[HelmCharts]
-    A --> C[eks-dev]
-    A --> D[eks-prod]
+flowchart TB
+    subgraph "Developer Workflow"
+        Dev[fa:fa-laptop "Developers"] -->|"Push changes"| Git[(fa:fa-code-branch "Git Repository")]
+        Dev -->|"Clone / Pull"| Git
+    end
     
-    B --> E["Chart1<br/>values-dev.yaml<br/>values-prod.yaml<br/>values.yaml"]
-    B --> F["Chart2<br/>values-dev.yaml<br/>values-prod.yaml<br/>values.yaml"]
+    subgraph "GitOps Engine"
+        Git -->|"Monitor"| ArgoCD["fa:fa-sync ArgoCD"]
+        ArgoCD -->|"Apply changes"| K8S[" fa:fa-dharmachakra Kubernetes"]
+        ArgoCD -->|"Report status"| Git
+    end
     
-    C --> G["applications:<br/>app1.yaml<br/>app2.yaml"]
-    C --> H[root.yaml]
+    subgraph "Runtime Environment"
+        K8S -->|"Deploy"| Apps["fa:fa-cubes Applications"]
+        K8S -->|"Deploy"| Infra["fa:fa-server Infrastructure"]
+        
+        Collector["fa:fa-search Splunk
+        OpenTelemetry
+        Collector"] -->|"Send telemetry"| Splunk["fa:fa-chart-line Splunk
+        Platform"]
+        
+        Apps -->|"Generate logs/metrics"| Collector
+        Infra -->|"Generate logs/metrics"| Collector
+    end
     
-    D --> I["applications:<br/>app1.yaml<br/>app2.yaml"]
-    D --> J[root.yaml]
+    subgraph "Environments"
+        direction LR
+        Dev_Env["fa:fa-flask Dev"]
+        Prod_Env["fa:fa-industry Prod"]
+    end
+    
+    ArgoCD -->|"Sync apps to"| Dev_Env
+    ArgoCD -->|"Sync apps to"| Prod_Env
+    Dev_Env -.->|"Deployed to"| K8S
+    Prod_Env -.->|"Deployed to"| K8S
+    
+    subgraph "Helm Charts"
+        direction LR
+        App_Charts["fa:fa-file-code Application
+        Charts"]
+        Infra_Charts["fa:fa-cogs Infrastructure
+        Charts"]
+    end
+    
+    Git -->|"Contains"| App_Charts
+    Git -->|"Contains"| Infra_Charts
+    App_Charts -.->|"Used by"| ArgoCD
+    Infra_Charts -.->|"Used by"| ArgoCD
+        
+    classDef git fill:#f34f29,color:white,stroke:#da5a47,stroke-width:1px
+    classDef argocd fill:#329AD6,color:white,stroke:#2f90c5,stroke-width:1px
+    classDef k8s fill:#326CE5,color:white,stroke:#2e64d4,stroke-width:1px
+    classDef apps fill:#47A248,color:white,stroke:#3f9240,stroke-width:1px
+    classDef infra fill:#767676,color:white,stroke:#666666,stroke-width:1px
+    classDef splunk fill:#111111,color:white,stroke:#000000,stroke-width:1px
+    classDef env fill:#FF9900,color:white,stroke:#ed8f00,stroke-width:1px
+    classDef charts fill:#0F1689,color:white,stroke:#0d1476,stroke-width:1px
+    classDef collector fill:#425CC7,color:white,stroke:#3c54b5,stroke-width:1px
+    
+    class Git git
+    class ArgoCD argocd
+    class K8S k8s
+    class Apps apps
+    class Infra infra
+    class Splunk splunk
+    class Dev_Env,Prod_Env env
+    class App_Charts,Infra_Charts charts
+    class Collector collector
 ```
 
-## Repository Structure
+## 🔄 The Power of GitOps Architecture
+
+### What is GitOps?
+
+GitOps is a paradigm shift in how we manage and deploy infrastructure and applications. At its core, GitOps uses Git as the **single source of truth** for declarative infrastructure and applications. With GitOps:
+
+- **✓ Declarative** - Everything is defined as code (Infrastructure as Code)
+- **✓ Versioned & Immutable** - Complete history of all changes
+- **✓ Pulled Automatically** - Changes are pulled by operators, not pushed
+- **✓ Continuously Reconciled** - System ensures actual state matches desired state
+
+### Why GitOps Matters
+
+Traditional deployment approaches often suffer from environment drift, manual errors, and lack of audit trails. GitOps solves these problems by:
+
+1. **🔒 Improving Security**
+    - Reduced direct access to production systems
+    - Cryptographically verifiable audit trail of all changes
+    - Role-based access controls through Git
+
+2. **⚡ Accelerating Deployments**
+    - Automated continuous delivery pipelines
+    - Faster recovery from failures
+    - Easier rollbacks to previous stable states
+
+3. **🔍 Enhancing Visibility**
+    - Complete audit history of all changes
+    - Clear visibility into what's deployed where
+    - Improved collaboration between teams
+
+4. **🔄 Ensuring Consistency**
+    - Eliminates drift between environments
+    - Consistent state across all clusters
+    - Self-healing infrastructure
+
+### ArgoCD: The GitOps Engine
+
+ArgoCD serves as the GitOps engine in our architecture, continuously synchronizing the desired state in Git with the actual state in Kubernetes. As a Kubernetes-native tool, ArgoCD:
+
+- **🔄 Continuously monitors** Git repositories for changes
+- **📊 Compares** the current state with the desired state
+- **🔧 Automatically applies** necessary changes to reach desired state
+- **🚨 Detects and alerts** on drift or synchronization failures
+- **📱 Provides a UI dashboard** for visibility across all applications
+
+### Architectural Benefits
+
+Our implementation combines GitOps with Helm charts and multi-environment support to achieve:
+
+1. **🌐 Environment Parity** - Dev, staging, and production environments use the same deployment process with environment-specific configurations.
+
+2. **📦 Application Packaging** - Helm charts standardize application deployment patterns.
+
+3. **🔄 Continuous Synchronization** - ArgoCD ensures the cluster state always matches the Git repository.
+
+4. **📊 Observability Integration** - Splunk OpenTelemetry Collector provides comprehensive monitoring.
+
+5. **🔄 Seamless Rollbacks** - In case of issues, reverting to a previous state is as simple as reverting a Git commit.
+
+### Real-world Impact
+
+Organizations implementing GitOps have reported:
+
+- **⏱️ 80% reduction** in time to deploy
+- **🔍 90% improvement** in recovery time
+- **🔧 70% reduction** in configuration errors
+- **📈 Significant increase** in deployment frequency
+
+By making Git the single source of truth, this architecture provides a robust, audit-able, and scalable approach to managing Kubernetes infrastructure across multiple environments.
+
+## 📂 Repository Structure
+
+The repository follows a well-organized structure to manage multiple applications across development and production environments:
 
 ```plaintext
 .
-├── HelmCharts/                 # Helm Charts directory
-│   ├── Chart1/
-│   │   ├── Chart.yaml         # Chart definition
-│   │   ├── templates/         # Kubernetes manifests templates
-│   │   ├── values-dev.yaml    # Development values
-│   │   ├── values-prod.yaml   # Production values
-│   │   └── values.yaml        # Default values
-│   └── Chart2/
-│       ├── Chart.yaml
-│       ├── templates/
-│       ├── values-dev.yaml
-│       ├── values-prod.yaml
-│       └── values.yaml
-│   
-├── eks-dev/             # Development cluster configurations
-│   ├── applications/
-│   │   ├── app1.yaml         # ArgoCD Application definition
-│   │   └── app2.yaml         # ArgoCD Application definition
-│   └── root.yaml             # Root Application definition
+├── .gitignore                        # Git ignore patterns
+├── README.md                         # This documentation file
 │
-└── eks-prod/           # Production cluster configurations
-    ├── applications/
-    │   ├── app1.yaml
-    │   └── app2.yaml
-    └── root.yaml
+├── HelmCharts/                       # All Helm charts for applications and infrastructure
+│   ├── annotations                   # Shared annotations reference file
+│   │
+│   ├── splunk-otel-collector/        # Splunk OpenTelemetry Collector
+│   │   ├── .helmignore
+│   │   ├── Chart.yaml                # Chart metadata
+│   │   ├── values.yaml               # Default values
+│   │   └── templates/                # Kubernetes manifest templates
+│   │       ├── _helpers.tpl          # Helper functions for templates
+│   │       ├── configmap.yml         # Collector configuration
+│   │       ├── deployment.yaml       # Main collector deployment
+│   │       ├── hpa.yaml              # Horizontal Pod Autoscaler
+│   │       ├── NOTES.txt             # Post-installation notes
+│   │       ├── pre-sync-healthcheck.yaml # PreSync health check
+│   │       ├── secret.yaml           # Secrets for Splunk token and endpoint
+│   │       ├── service.yaml          # Service for the collector
+│   │       └── serviceaccount.yaml   # Service account with RBAC
+│   │
+│   ├── app-client/                   # Frontend application chart
+│   │   ├── .helmignore
+│   │   ├── Chart.yaml
+│   │   ├── values.yaml               # Default values
+│   │   ├── values-dev.yaml           # Development-specific values
+│   │   └── templates/                # Kubernetes manifest templates
+│   │       ├── _helpers.tpl
+│   │       ├── configmap.yml
+│   │       ├── deployment.yaml
+│   │       ├── hpa.yaml
+│   │       ├── ingress.yaml
+│   │       ├── NOTES.txt
+│   │       ├── pre-sync-healthcheck.yaml
+│   │       ├── service.yaml
+│   │       └── serviceaccount.yaml
+│   │
+│   └── app-api/                      # Backend API application chart
+│       ├── .helmignore
+│       ├── Chart.yaml
+│       ├── values.yaml               # Default values
+│       ├── values-dev.yaml           # Development-specific values
+│       └── templates/                # Kubernetes manifest templates
+│           ├── _helpers.tpl
+│           ├── configmap.yml
+│           ├── deployment.yaml
+│           ├── hpa.yaml
+│           ├── ingress.yaml
+│           ├── NOTES.txt
+│           ├── pre-sync-healthcheck.yaml
+│           ├── service.yaml
+│           └── serviceaccount.yaml
+│
+├── eks-dev/                          # Development environment configuration
+│   ├── applications/                 # Application definitions
+│   │   ├── splunk-otel-collector.yaml  # Observability collector definition
+│   │   ├── app-client.yaml           # Frontend application definition
+│   │   └── app-api.yaml              # Backend API application definition
+│   └── root.yaml                     # Root application that manages all applications
+│
+└── eks-prod/                         # Production environment configuration
+    ├── applications/                 # Production applications
+    │   ├── splunk-otel-collector.yaml  # Production observability collector
+    │   ├── app-client.yaml           # Production frontend application
+    │   └── app-api.yaml              # Production backend API application
+    └── root.yaml                     # Production root application
 ```
 
-## Components
+## 🧩 Key Components
 
-### HelmCharts Directory
-- Contains all Helm charts used in the infrastructure
-- Each chart includes:
-  - Base configuration (`values.yaml`)
-  - Environment-specific values (`values-dev.yaml`, `values-prod.yaml`)
-  - Kubernetes manifest templates
-  - Chart metadata and dependencies
+### 📦 HelmCharts
 
-### Cluster Directories (eks-dev, eks-prod)
-- Separate directories for each EKS cluster
-- Contains:
-  - ArgoCD Application definitions
-  - Root application configuration
-  - Environment-specific settings
+The `HelmCharts` directory contains all Helm charts for both applications and infrastructure. Each chart includes:
 
-### Application Definitions
-- Located in `applications/` directory within each cluster
-- Define which charts to deploy
-- Specify source repository and target cluster
-- Include environment-specific configurations
+#### Application Charts (app-client, app-api)
+These are your business applications deployed to the cluster:
 
-## Setup and Usage
+- **Frontend (app-client)**: Web application (React, Angular, etc.)
+    - Configured with NodeJS instrumentation for observability
+    - Exposed via AWS ALB ingress
+
+- **Backend API (app-api)**: API service (Node.js, .NET Core, Java, etc.)
+    - Instrumented with OpenTelemetry
+    - Configured with health checks
+    - Exposed via AWS ALB ingress
+
+#### Infrastructure Chart (splunk-otel-collector)
+This is responsible for collecting and forwarding telemetry data:
+
+- **Splunk OpenTelemetry Collector**: Observability agent
+    - Collects logs from Kubernetes pods
+    - Gathers metrics from Kubelet
+    - Receives traces from instrumented applications
+    - Forwards all telemetry to Splunk platform
+
+### 📱 Environment Directories (eks-dev, eks-prod)
+
+Each environment directory contains:
+
+- **applications/**: ArgoCD Application manifest files that define what to deploy
+- **root.yaml**: Root Application that manages all applications in the environment
+
+Each Application manifest specifies:
+- Source path to the Helm chart
+- Target namespace for deployment
+- Environment-specific value files to use
+- Sync policies and automation rules
+
+### 🔧 Pre-Sync Health Checks
+
+A notable feature is the pre-sync health checks implemented for each application:
+
+- **API health checks**: HTTP-based validation for backend services
+- **UI health checks**: TCP-based connection tests for frontend applications
+- **Collector health checks**: Port availability validation for the collector
+
+These checks run before syncing changes to prevent broken deployments.
+
+## 🛠️ Setup and Usage
 
 ### Prerequisites
+
 - AWS CLI configured with appropriate permissions
 - kubectl installed and configured
 - Helm 3.x installed
 - ArgoCD CLI installed
+- Splunk HEC token and endpoint information
 
 ### Initial Setup
 
-1. **Configure AWS CLI**
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-username/your-gitops-repo.git
+   cd your-gitops-repo
+   ```
+
+2. **Configure AWS CLI and Connect to EKS**
    ```bash
    aws configure
+   aws eks update-kubeconfig --name your-cluster-name --region your-region
    ```
 
-2. **Connect to EKS Cluster**
-   ```bash
-   aws eks update-kubeconfig --name cluster-name --region region
-   ```
-
-3. **Install ArgoCD**
+3. **Install ArgoCD on Your Cluster**
    ```bash
    kubectl create namespace argocd
    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
    ```
 
-4. **Apply Root Application**
+4. **Configure Splunk Token**
+
+   Update the `values.yaml` in the `HelmCharts/splunk-otel-collector` directory:
+
+   ```yaml
+   # Splunk specific settings
+   splunk:
+     endpoint: "https://your-splunk-hec-endpoint.com/services/collector"
+     token: "your-splunk-hec-token"
+     index: "k8-dev"
+   ```
+
+5. **Apply the Root Application**
+
+   This will bootstrap the entire GitOps process:
+
    ```bash
    kubectl apply -f eks-dev/root.yaml
    ```
 
+6. **Access ArgoCD UI**
+
+   ```bash
+   kubectl port-forward svc/argocd-server -n argocd 8080:443
+   ```
+
+   Then open https://localhost:8080 in your browser.
+
 ### Adding New Applications
 
-1. Create a new Helm chart in `HelmCharts/` directory
-2. Add environment-specific values files
-3. Create application definition in appropriate cluster directory
-4. Update root application if necessary
+1. **Create a New Helm Chart**
 
-## Best Practices
+   Add your chart in the `HelmCharts` directory:
 
-### Version Control
-- Use semantic versioning for Helm charts
-- Tag all production deployments
-- Maintain a changelog
+   ```bash
+   mkdir -p HelmCharts/your-new-app/templates
+   # Create necessary files (Chart.yaml, values.yaml, etc.)
+   ```
 
-### Configuration Management
-- Keep sensitive data in AWS Secrets Manager or Kubernetes Secrets
-- Use environment-specific value files
-- Document all configuration options
+2. **Add ArgoCD Application Definitions**
 
-### Security
-- Follow least privilege principle
-- Regular security scanning of Helm charts
-- Implement network policies
-- Use RBAC for access control
+   Create a new file in `eks-dev/applications/your-new-app.yaml`:
 
-### Monitoring and Logging
-- Configure monitoring for all applications
-- Set up centralized logging
-- Implement alerts for critical components
+   ```yaml
+   apiVersion: argoproj.io/v1alpha1
+   kind: Application
+   metadata:
+     name: your-new-app
+     namespace: argocd
+   spec:
+     destination:
+       name: in-cluster
+       namespace: eks-dev
+     source:
+       path: "HelmCharts/your-new-app"
+       repoURL: "git@github.com:your-username/your-gitops-repo.git"
+       targetRevision: HEAD
+     # Add other necessary configurations
+   ```
 
-## Troubleshooting
+3. **Add Observability Annotations**
+
+   For automatic instrumentation, add the appropriate annotations to your application:
+
+   For .NET applications:
+   ```yaml
+   annotations:
+     instrumentation.opentelemetry.io/inject-dotnet: "splunk-otel-collector/splunk-otel-collector"
+     instrumentation.opentelemetry.io/otel-dotnet-auto-runtime: "linux-x64"
+   ```
+
+   For NodeJS applications:
+   ```yaml
+   annotations:
+     instrumentation.opentelemetry.io/inject-nodejs: "splunk-otel-collector/splunk-otel-collector"
+   ```
+
+   For Java applications:
+   ```yaml
+   annotations:
+     instrumentation.opentelemetry.io/inject-java: "splunk-otel-collector/splunk-otel-collector"
+   ```
+
+   For Python applications:
+   ```yaml
+   annotations:
+     instrumentation.opentelemetry.io/inject-python: "splunk-otel-collector/splunk-otel-collector"
+   ```
+
+## 📊 Splunk OpenTelemetry Integration
+
+The Splunk OpenTelemetry Collector is a key component in this GitOps architecture, providing comprehensive observability for all applications.
+
+### Features
+
+- **Automatic Log Collection**: Captures container logs from all pods
+- **Kubernetes Metrics**: Collects metrics from Kubelet API
+- **Application Instrumentation**: Auto-instruments applications using agents
+- **Span Collection**: Captures distributed traces for request flows
+- **Direct Splunk Integration**: Forwards all telemetry to Splunk Cloud
+
+### Configuration Components
+
+The collector configuration is divided into several parts:
+
+1. **Receivers**: Define data input sources
+    - `filelog`: Container log files
+    - `kubeletstats`: Kubernetes metrics
+    - `otlp`: OpenTelemetry Protocol for traces and metrics
+
+2. **Processors**: Transform and enrich data
+    - `batch`: Group data for efficient transmission
+    - `k8sattributes`: Add Kubernetes metadata
+    - `resourcedetection`: Detect cloud provider information
+
+3. **Exporters**: Define data output destinations
+    - `splunk_hec`: Send metrics to Splunk
+    - `splunk_hec/logs`: Send logs to Splunk
+
+### Verification
+
+After deployment, verify the collector is working correctly:
+
+```bash
+# Check collector pods
+kubectl get pods -n splunk-otel-collector
+
+# Check collector logs
+kubectl logs -n splunk-otel-collector -l app.kubernetes.io/name=splunk-otel-collector -f
+
+# Verify applications are instrumented
+kubectl get pods -n eks-dev -o jsonpath='{.items[*].metadata.annotations}' | grep instrumentation
+```
+
+## 🔀 Deployment Workflow
+
+The GitOps workflow in this architecture follows these steps:
+
+1. **Change**: Make changes to Helm charts or values files
+2. **Commit & Push**: Push changes to Git repository
+3. **Detection**: ArgoCD detects changes in the repository
+4. **Validation**: Pre-sync health checks validate current deployments
+5. **Application**: ArgoCD applies changes to the cluster
+6. **Verification**: Post-sync checks confirm successful deployment
+7. **Monitoring**: Splunk collects telemetry from the updated applications
+
+### Sync Waves
+
+Applications are deployed in specific order using sync waves:
+
+1. **Infrastructure (Wave 0)**: splunk-otel-collector is deployed first
+2. **Backend Services (Wave 1)**: API services are deployed next
+3. **Frontend Applications (Wave 2)**: UI applications are deployed last
+
+This ensures dependencies are available before dependent applications.
+
+## 🔒 Security Considerations
+
+The architecture incorporates several security best practices:
+
+- **Secret Management**: Splunk tokens stored in Kubernetes secrets
+- **RBAC**: Service accounts with least-privilege permissions
+- **Network Security**: AWS security groups control access
+- **TLS**: HTTPS termination at ALB with modern TLS policies
+- **Health Checks**: Prevent deployment of broken applications
+
+## 🔍 Troubleshooting
 
 Common issues and solutions:
 
-1. **ArgoCD Sync Issues**
-   - Verify Git repository access
-   - Check application logs
-   - Validate Helm chart values
+### ArgoCD Sync Issues
 
-2. **EKS Connectivity**
-   - Confirm AWS credentials
-   - Check VPC and security group settings
-   - Verify kubectl configuration
+- **Problem**: Application shows "OutOfSync" but doesn't sync
+    - **Solution**: Check Application's sync status in ArgoCD UI
+    - **Command**: `argocd app get <app-name> --refresh`
 
-3. **Helm Chart Problems**
-   - Validate chart syntax
-   - Check dependencies
-   - Verify values files format
+- **Problem**: Sync fails with error
+    - **Solution**: Check the error in ArgoCD UI and logs
+    - **Command**: `kubectl logs -n argocd deployment/argocd-application-controller`
 
-## Contributing
+### Helm Chart Problems
+
+- **Problem**: Helm template rendering errors
+    - **Solution**: Validate templates locally
+    - **Command**: `helm template HelmCharts/your-app --debug`
+
+- **Problem**: Invalid chart structure
+    - **Solution**: Verify chart structure follows Helm best practices
+    - **Reference**: [Helm Best Practices](https://helm.sh/docs/chart_best_practices/)
+
+### Splunk Collector Issues
+
+- **Problem**: No data in Splunk
+    - **Check**: Verify HEC token and endpoint configuration
+    - **Command**: `kubectl get secret -n splunk-otel-collector splunk-otel-collector-secrets -o yaml`
+
+- **Problem**: Collector pods crashing
+    - **Check**: Inspect collector logs
+    - **Command**: `kubectl logs -n splunk-otel-collector -l app.kubernetes.io/name=splunk-otel-collector`
+
+## 🚀 Advanced Topics
+
+### Multi-Cluster Management
+
+To extend this architecture for multi-cluster management:
+
+1. **Create additional environment directories** (e.g., `eks-staging`)
+2. **Configure ArgoCD with multiple clusters**
+3. **Adjust application manifests** to target specific clusters
+
+### CI/CD Integration
+
+This GitOps architecture can be enhanced with CI/CD pipelines:
+
+1. **Add CI workflows** to validate Helm charts
+2. **Create build pipelines** for application images
+3. **Configure webhooks** to trigger ArgoCD synchronization
+
+### Disaster Recovery
+
+For disaster recovery scenarios:
+
+1. **Backup ArgoCD configurations**
+2. **Document cluster rebuild process**
+3. **Set up multi-region redundancy** for critical applications
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+### Contribution Guidelines
+
+- Follow [Helm best practices](https://helm.sh/docs/chart_best_practices/) for Helm charts
+- Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages
+- Include meaningful comments in complex templates
+- Update documentation when adding features
+
+## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
