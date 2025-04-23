@@ -58,7 +58,7 @@ collector:
       enabled: true
 
 # Cluster metadata
-clusterName: "eks-comax-dev"
+clusterName: "eks-dev"
 environment: "development"
 region: "eu-west-1"
 
