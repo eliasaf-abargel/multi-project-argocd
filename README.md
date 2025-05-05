@@ -157,74 +157,73 @@ The repository follows a well-organized structure to manage multiple application
 
 ```plaintext
 .
-├── .gitignore                           # Git ignore patterns
-├── README.md                            # This documentation file
+├── .gitignore                           
+├── README.md                            
 │
-├── HelmCharts/                          # All Helm charts for applications and infrastructure
-│   ├── annotations                      # Shared annotations reference file
+├── HelmCharts/                          
+│   ├── annotations                    
 │   │
-│   ├── splunk-otel-collector/           # Splunk OpenTelemetry Collector
+│   ├── splunk-otel-collector/           
 │   │   ├── .helmignore
-│   │   ├── Chart.yaml                   # Chart metadata
-│   │   ├── values.yaml                  # Default values
-│   │   └── templates/                   # Kubernetes manifest templates
-│   │       ├── _helpers.tpl             # Helper functions for templates
-│   │       ├── configmap.yml            # Collector configuration
-│   │       ├── deployment.yaml          # Main collector deployment
-│   │       ├── hpa.yaml                 # Horizontal Pod Autoscaler
-│   │       ├── NOTES.txt                # Post-installation notes
-│   │       ├── pre-sync-healthcheck.yaml # PreSync health check
-│   │       ├── secret.yaml              # Secrets for Splunk token and endpoint
-│   │       ├── service.yaml             # Service for the collector
-│   │       └── serviceaccount.yaml      # Service account with RBAC
+│   │   ├── Chart.yaml                  
+│   │   ├── values.yaml                 
+│   │   └── templates/                  
+│   │       ├── _helpers.tpl            
+│   │       ├── configmap.yml            
+│   │       ├── deployment.yaml          
+│   │       ├── hpa.yaml                 
+│   │       ├── NOTES.txt                
+│   │       ├── pre-sync-healthcheck.yaml 
+│   │       ├── secret.yaml            
+│   │       ├── service.yaml             
+│   │       └── serviceaccount.yaml      
 │   │
-│   ├── app-client/                      # Frontend application chart
+│   ├── app-client/                      
 │   │   ├── .helmignore
-│   │   ├── Chart.yaml                   # Chart metadata
-│   │   ├── values.yaml                  # Default values
-│   │   ├── values-dev.yaml              # Development-specific values
-│   │   ├── values-prod.yaml             # Production-specific values
-│   │   └── templates/                   # Kubernetes manifest templates
-│   │       ├── _helpers.tpl             # Helper functions
-│   │       ├── configmap.yml            # Environment variables
-│   │       ├── deployment.yaml          # Application deployment
-│   │       ├── hpa.yaml                 # Horizontal Pod Autoscaler
-│   │       ├── ingress.yaml             # AWS ALB Ingress
-│   │       ├── NOTES.txt                # Usage notes
-│   │       ├── pre-sync-healthcheck.yaml # Health validation
-│   │       ├── service.yaml             # Kubernetes service
-│   │       └── serviceaccount.yaml      # Service account
+│   │   ├── Chart.yaml                  
+│   │   ├── values.yaml                  
+│   │   ├── values-dev.yaml              
+│   │   ├── values-prod.yaml         
+│   │   └── templates/                   
+│   │       ├── _helpers.tpl             
+│   │       ├── configmap.yml            
+│   │       ├── deployment.yaml          
+│   │       ├── hpa.yaml                 
+│   │       ├── NOTES.txt                
+│   │       ├── pre-sync-healthcheck.yaml 
+│   │       ├── service.yaml           
+│   │       └── serviceaccount.yaml     
 │   │
-│   └── app-api/                         # Backend API application chart
+│   └── app-api/                         
 │       ├── .helmignore
-│       ├── Chart.yaml                   # Chart metadata
-│       ├── values.yaml                  # Default values
-│       ├── values-dev.yaml              # Development-specific values
-│       ├── values-prod.yaml             # Production-specific values
-│       └── templates/                   # Kubernetes manifest templates
-│           ├── _helpers.tpl             # Helper functions
-│           ├── configmap.yml            # Environment variables
-│           ├── deployment.yaml          # Application deployment
-│           ├── hpa.yaml                 # Horizontal Pod Autoscaler
-│           ├── ingress.yaml             # AWS ALB Ingress
-│           ├── NOTES.txt                # Usage notes
-│           ├── pre-sync-healthcheck.yaml # Health validation
-│           ├── service.yaml             # Kubernetes service
-│           └── serviceaccount.yaml      # Service account
+│       ├── Chart.yaml                  
+│       ├── values.yaml                  
+│       ├── values-dev.yaml              
+│       ├── values-prod.yaml            
+│       └── templates/                   
+│           ├── _helpers.tpl             
+│           ├── configmap.yml            
+│           ├── deployment.yaml          
+│           ├── hpa.yaml                 
+│           ├── ingress.yaml             
+│           ├── NOTES.txt                
+│           ├── pre-sync-healthcheck.yaml 
+│           ├── service.yaml             
+│           └── serviceaccount.yaml      
 │
-├── eks-dev/                             # Development environment configuration
-│   ├── applications/                    # Application definitions
-│   │   ├── splunk-otel-collector.yaml   # Observability collector definition
-│   │   ├── app-client.yaml              # Frontend application definition
-│   │   └── app-api.yaml                 # Backend API application definition
-│   └── root.yaml                        # Root application that manages all applications
+├── eks-dev/                             
+│   ├── applications/                    
+│   │   ├── splunk-otel-collector.yaml   
+│   │   ├── app-client.yaml              
+│   │   └── app-api.yaml                 
+│   └── root.yaml                        
 │
-└── eks-prod/                            # Production environment configuration
-    ├── applications/                    # Production applications
-    │   ├── splunk-otel-collector.yaml   # Production observability collector
-    │   ├── app-client.yaml              # Production frontend application
-    │   └── app-api.yaml                 # Production backend API application
-    └── root.yaml                        # Production root application
+└── eks-prod/                            
+    ├── applications/                    
+    │   ├── splunk-otel-collector.yaml   
+    │   ├── app-client.yaml              
+    │   └── app-api.yaml                 
+    └── root.yaml                        
 ```
 
 ## 🧩 Key Components
